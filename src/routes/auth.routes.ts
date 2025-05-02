@@ -45,6 +45,8 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', asyncHandler(login));
-
-export default router;
+router.get('/', (req, res) => {
+    res.send('Autenticação OK');
+  });
+  
+  export default router;

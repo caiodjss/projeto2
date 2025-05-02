@@ -1,18 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { listarUsuarios, criarUsuario } from '../controllers/usuario.controller';
 
 const router = Router();
-const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
-  try {
-    const usuarios = await prisma.usuario.findMany();
-    res.json(usuarios);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar usuários' });
-  }
-});
-
-// Adicione outras rotas CRUD...
+router.get('/', listarUsuarios);
+router.post('/', criarUsuario); // Para adicionar usuário manualmente (ex: professor)
 
 export default router;

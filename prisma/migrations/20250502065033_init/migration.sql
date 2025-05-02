@@ -143,15 +143,6 @@ CREATE TABLE "_AlunoTurma" (
 CREATE UNIQUE INDEX "usuarios_email_key" ON "usuarios"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "progresso_aluno_alunoId_videoId_key" ON "progresso_aluno"("alunoId", "videoId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "progresso_aluno_alunoId_apostilaId_key" ON "progresso_aluno"("alunoId", "apostilaId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "progresso_aluno_alunoId_avaliacaoId_key" ON "progresso_aluno"("alunoId", "avaliacaoId");
-
--- CreateIndex
 CREATE INDEX "_AlunoTurma_B_index" ON "_AlunoTurma"("B");
 
 -- AddForeignKey

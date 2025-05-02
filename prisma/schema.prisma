@@ -135,10 +135,6 @@ model ProgressoAluno {
   notaAvaliacao       Float?
   dataUltimaInteracao DateTime   @default(now())
 
-  @@unique([alunoId, videoId], name: "alunoId_videoId")
-  @@unique([alunoId, apostilaId], name: "alunoId_apostilaId")
-  @@unique([alunoId, avaliacaoId], name: "alunoId_avaliacaoId")
-
   @@map("progresso_aluno")
 }
 
