@@ -7,7 +7,7 @@ API para gerenciamento de cursos, professores e alunos com Prisma e TypeScript
 - Express
 - TypeScript
 - Prisma ORM
-- PostgreSQL (ou outro banco configurável)
+- PostgreSQL
 - Swagger (documentação)
 
 ## 🚀 Como Executar
@@ -45,25 +45,3 @@ src/
 └── types/           # Tipos customizados
 📄 Documentação
 Acesse a documentação Swagger em /api-docs após iniciar o servidor
-
-⚠️ Observações Importantes
-Configure corretamente as variáveis no .env
-
-Sempre execute npx prisma generate após alterar o schema
-
-Para produção, configure um servidor PostgreSQL dedicado
-
-
-Este README fornece:
-- Visão geral do projeto
-- Instruções básicas de instalação
-- Documentação das rotas
-- Estrutura de pastas
-- Informações sobre documentação
-- Observações importantes
-
-Você pode expandir cada seção conforme necessário adicionando:
-- Exemplos de requests/responses
-- Configurações adicionais
-- Variáveis de ambiente específicas
-- Informações sobre testes
