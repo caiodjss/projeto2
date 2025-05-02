@@ -96,3 +96,41 @@ export default swaggerSpec;
  *         ordem:
  *           type: integer
  */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Plano:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         nome:
+ *           type: string
+ *           enum: [BASICO, EMPREENDEDOR, STARTUP]
+ *         descricao:
+ *           type: string
+ * 
+ *     ProgressoAluno:
+ *       type: object
+ *       properties:
+ *         alunoId:
+ *           type: string
+ *         cursoId:
+ *           type: string
+ *         videosAssistidos:
+ *           type: array
+ *           items:
+ *             type: string
+ *         porcentagemConclusao:
+ *           type: number
+ */
+/**
+ * @swagger
+ * /api/cursos:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Cursos]
+ *     description: Rota protegida para admin/professor
+ */

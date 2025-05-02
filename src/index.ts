@@ -1,5 +1,7 @@
+// src/index.ts
 import 'dotenv/config';
-import { app, prisma } from './app';
+import { app } from './app';
+import prisma from './config/database'; // Import do prisma diretamente
 
 const PORT = process.env.PORT || 3000;
 
@@ -9,7 +11,7 @@ const server = app.listen(PORT, () => {
 
 // Fechar conexões adequadamente
 process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
+  await prisma.$disconnect(); // Usando prisma diretamente
   server.close(() => {
     console.log('Servidor encerrado');
   });

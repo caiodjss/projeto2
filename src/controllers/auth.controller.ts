@@ -1,47 +1,41 @@
-import { Request, Response, NextFunction } from 'express';
+// src/controllers/auth.controller.ts
+import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../config/prisma';
+import { env } from '../config/env';
+import prisma from '../config/database';
+import { generateToken } from '../config/auth';
 
-export const login = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+type LoginInput = {
+  email: string;
+  senha: string;
+};
+
+export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => {
   try {
     const { email, senha } = req.body;
 
     if (!email || !senha) {
-      res.status(400).json({ erro: 'Email e senha são obrigatórios' });
-      return;
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
     const usuario = await prisma.usuario.findUnique({ 
       where: { email },
-      select: {
-        id: true,
-        nome: true,
-        email: true,
-        senha: true,
-        tipo: true
-      }
     });
 
     if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
-      res.status(401).json({ erro: 'Credenciais inválidas' });
-      return;
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const token = jwt.sign(
-      { id: usuario.id, tipo: usuario.tipo },
-      process.env.JWT_SECRET!,
-      { expiresIn: '8h' }
-    );
+    const token = generateToken({
+      id: usuario.id,
+      tipo: usuario.tipo,
+    });
 
     const { senha: _, ...usuarioSemSenha } = usuario;
     res.json({ token, usuario: usuarioSemSenha });
 
   } catch (error) {
-    next(error);
+    console.error('Erro no login:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
   }
 };

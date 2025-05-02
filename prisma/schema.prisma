@@ -8,21 +8,21 @@ datasource db {
 }
 
 model Usuario {
-  id                 String           @id @default(uuid())
-  nome               String
-  email              String           @unique
-  senha              String
-  tipo               TipoUsuario
-  dataCadastro       DateTime         @default(now()) @map("created_at")
-  dataAtualizacao    DateTime         @updatedAt @map("updated_at")
-  planoId            String
-  mensagensRecebidas Mensagem[]       @relation("MensagensRecebidas")
-  mensagensEnviadas  Mensagem[]       @relation("MensagensEnviadas")
-  progressos         ProgressoAluno[]
-  turmasProfessor    Turma[]          @relation("ProfessorTurma")
-  plano              Plano            @relation(fields: [planoId], references: [id])
-  turmas             Turma[]          @relation("AlunoTurma")
-  cursos             Curso[]
+  id                  String           @id @default(uuid())
+  nome                String
+  email               String           @unique
+  senha               String
+  tipo                TipoUsuario
+  dataCadastro        DateTime         @default(now()) @map("created_at")
+  dataAtualizacao     DateTime         @updatedAt @map("updated_at")
+  planoId             String?
+  mensagensRecebidas  Mensagem[]       @relation("MensagensRecebidas")
+  mensagensEnviadas   Mensagem[]       @relation("MensagensEnviadas")
+  progressos          ProgressoAluno[]
+  cursosMinistrados   Curso[]          @relation("CursosMinistrados")
+  plano               Plano?           @relation(fields: [planoId], references: [id])
+  turmasMatriculadas  Turma[]          @relation("AlunoTurma")
+  turmasComoProfessor Turma[]          @relation("ProfessorTurma")
 
   @@map("usuarios")
 }
@@ -32,120 +32,125 @@ model Plano {
   nome      String
   descricao String
   preco     Float?
-  createdAt DateTime  @default(now()) @map("created_at")
   usuarios  Usuario[]
+  createdAt DateTime  @default(now()) @map("created_at")
 
   @@map("planos")
 }
 
 model Curso {
-  id           String   @id @default(uuid())
+  id           String      @id @default(uuid())
   titulo       String
   descricao    String?
-  categoria    String?
+  categoria    NivelCurso?
   cargaHoraria Int?
-  professor    Usuario  @relation(fields: [professorId], references: [id])
+  professor    Usuario     @relation(fields: [professorId], references: [id], name: "CursosMinistrados")
   professorId  String
   modulos      Modulo[]
-  turmas       Turma[] // ← Adicione esta linha para o relacionamento inverso
-  createdAt    DateTime @default(now())
+  turmas       Turma[]
+  createdAt    DateTime    @default(now())
 
   @@map("cursos")
 }
 
 model Turma {
-  id          String    @id @default(uuid())
+  id          String      @id @default(uuid())
   nome        String
+  curso       Curso       @relation(fields: [cursoId], references: [id])
   cursoId     String
+  professor   Usuario     @relation(fields: [professorId], references: [id], name: "ProfessorTurma")
   professorId String
+  alunos      Usuario[]   @relation("AlunoTurma")
   dataInicio  DateTime
   dataFim     DateTime
-  createdAt   DateTime  @default(now()) @map("created_at")
-  curso       Curso     @relation(fields: [cursoId], references: [id])
-  professor   Usuario   @relation("ProfessorTurma", fields: [professorId], references: [id])
-  alunos      Usuario[] @relation("AlunoTurma")
+  status      StatusTurma @default(ABERTA)
+  createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("turmas")
 }
 
 model Modulo {
   id         String      @id @default(uuid())
+  curso      Curso       @relation(fields: [cursoId], references: [id])
   cursoId    String
   titulo     String
   ordem      Int
-  createdAt  DateTime    @default(now()) @map("created_at")
   apostilas  Apostila[]
   avaliacoes Avaliacao[]
-  curso      Curso       @relation(fields: [cursoId], references: [id])
   videos     Video[]
+  createdAt  DateTime    @default(now()) @map("created_at")
 
   @@map("modulos")
 }
 
 model Video {
   id         String           @id @default(uuid())
+  modulo     Modulo           @relation(fields: [moduloId], references: [id])
   moduloId   String
   titulo     String
   urlVideo   String
   duracao    Int
-  createdAt  DateTime         @default(now()) @map("created_at")
   progressos ProgressoAluno[]
-  modulo     Modulo           @relation(fields: [moduloId], references: [id])
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   @@map("videos")
 }
 
 model Apostila {
   id         String           @id @default(uuid())
+  modulo     Modulo           @relation(fields: [moduloId], references: [id])
   moduloId   String
   titulo     String
   arquivoUrl String
-  createdAt  DateTime         @default(now()) @map("created_at")
-  modulo     Modulo           @relation(fields: [moduloId], references: [id])
   progressos ProgressoAluno[]
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   @@map("apostilas")
 }
 
 model Avaliacao {
   id         String           @id @default(uuid())
+  modulo     Modulo           @relation(fields: [moduloId], references: [id])
   moduloId   String
   titulo     String
   descricao  String
-  createdAt  DateTime         @default(now()) @map("created_at")
-  modulo     Modulo           @relation(fields: [moduloId], references: [id])
   progressos ProgressoAluno[]
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   @@map("avaliacoes")
 }
 
 model ProgressoAluno {
   id                  String     @id @default(uuid())
+  aluno               Usuario    @relation(fields: [alunoId], references: [id])
   alunoId             String
+  video               Video?     @relation(fields: [videoId], references: [id])
   videoId             String?
+  apostila            Apostila?  @relation(fields: [apostilaId], references: [id])
   apostilaId          String?
+  avaliacao           Avaliacao? @relation(fields: [avaliacaoId], references: [id])
   avaliacaoId         String?
   progressoVideo      Int?       @default(0)
   baixouApostila      Boolean    @default(false)
   notaAvaliacao       Float?
   dataUltimaInteracao DateTime   @default(now())
-  aluno               Usuario    @relation(fields: [alunoId], references: [id])
-  apostila            Apostila?  @relation(fields: [apostilaId], references: [id])
-  avaliacao           Avaliacao? @relation(fields: [avaliacaoId], references: [id])
-  video               Video?     @relation(fields: [videoId], references: [id])
+
+  @@unique([alunoId, videoId], name: "alunoId_videoId")
+  @@unique([alunoId, apostilaId], name: "alunoId_apostilaId")
+  @@unique([alunoId, avaliacaoId], name: "alunoId_avaliacaoId")
 
   @@map("progresso_aluno")
 }
 
 model Mensagem {
   id             String   @id @default(uuid())
+  remetente      Usuario  @relation("MensagensEnviadas", fields: [remetenteId], references: [id])
   remetenteId    String
+  destinatario   Usuario  @relation("MensagensRecebidas", fields: [destinatarioId], references: [id])
   destinatarioId String
   conteudo       String
   lida           Boolean  @default(false)
   createdAt      DateTime @default(now()) @map("created_at")
-  destinatario   Usuario  @relation("MensagensRecebidas", fields: [destinatarioId], references: [id])
-  remetente      Usuario  @relation("MensagensEnviadas", fields: [remetenteId], references: [id])
 
   @@map("mensagens")
 }
@@ -167,11 +172,4 @@ enum StatusTurma {
   EM_ANDAMENTO
   CONCLUIDA
   CANCELADA
-}
-
-enum TipoNotificacao {
-  SISTEMA
-  MENSAGEM
-  ATIVIDADE
-  AVALIACAO
 }
