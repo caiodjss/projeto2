@@ -1,22 +1,26 @@
-// src/controllers/auth.controller.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { env } from '../config/env';
+import { z } from 'zod';
 import prisma from '../config/database';
 import { generateToken } from '../config/auth';
+import { TipoUsuario } from '@prisma/client';
 
-type LoginInput = {
-  email: string;
-  senha: string;
-};
+const LoginSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+  senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+});
 
-export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => {
+const CriarUsuarioSchema = z.object({
+  nome: z.string().min(3),
+  email: z.string().email(),
+  senha: z.string().min(6),
+  tipo: z.nativeEnum(TipoUsuario),
+  planoId: z.string().optional(),
+});
+
+export const login = async (req: Request, res: Response) => {
   try {
-    const { email, senha } = req.body;
-
-    if (!email || !senha) {
-      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-    }
+    const { email, senha } = LoginSchema.parse(req.body);
 
     const usuario = await prisma.usuario.findUnique({ 
       where: { email },
@@ -35,7 +39,60 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
     res.json({ token, usuario: usuarioSemSenha });
 
   } catch (error) {
-    console.error('Erro no login:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message) });
+    }
     res.status(500).json({ error: 'Erro interno no servidor' });
+  }
+};
+
+export const criarUsuario = async (req: Request, res: Response) => {
+  try {
+    const dadosValidados = CriarUsuarioSchema.parse(req.body);
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
+    const senhaHash = await bcrypt.hash(dadosValidados.senha, saltRounds);
+
+    const usuarioExistente = await prisma.usuario.findUnique({
+      where: { email: dadosValidados.email },
+    });
+
+    if (usuarioExistente) {
+      return res.status(400).json({ error: 'E-mail já cadastrado' });
+    }
+
+    const novoUsuario = await prisma.usuario.create({
+      data: {
+        nome: dadosValidados.nome,
+        email: dadosValidados.email,
+        senha: senhaHash,
+        tipo: dadosValidados.tipo,
+        planoId: dadosValidados.planoId || null,
+      },
+      select: { 
+        id: true, 
+        nome: true, 
+        email: true, 
+        tipo: true, 
+        dataCadastro: true,
+        plano: {
+          select: {
+            id: true,
+            nome: true
+          }
+        }
+      },
+    });
+
+    const token = generateToken({
+      id: novoUsuario.id,
+      tipo: novoUsuario.tipo,
+    });
+
+    res.status(201).json({ usuario: novoUsuario, token });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message) });
+    }
+    res.status(500).json({ error: 'Erro ao criar usuário' });
   }
 };

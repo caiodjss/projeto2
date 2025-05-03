@@ -1,31 +1,60 @@
 import { Router } from 'express';
-import { login } from '../controllers/auth.controller';
-import { asyncHandler } from '../utils/asyncHandler';
+import { login, criarUsuario } from '../controllers/auth.controller';
+import { validateDto } from '../middlewares/validate';
+import { LoginDto, CriarUsuarioDto } from '../dto/auth.dto';
 
 const router = Router();
+
 /**
  * @swagger
- * /auth/login:
+ * /auth/registrar:
  *   post:
- *     summary: Autentica um usuário
  *     tags: [Autenticação]
+ *     summary: Registrar novo usuário
+ *     description: Cria uma conta de usuário na plataforma
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - senha
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: aluno@ead.com
- *               senha:
- *                 type: string
- *                 example: senha123
+ *             $ref: '#/components/schemas/UsuarioCreate'
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 usuario:
+ *                   $ref: '#/components/schemas/Usuario'
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: Erro de validação
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+router.post('/registrar', validateDto(CriarUsuarioDto), criarUsuario);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags: [Autenticação]
+ *     summary: Autenticar usuário
+ *     description: Realiza login e retorna token JWT
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UsuarioLogin'
  *     responses:
  *       200:
  *         description: Login bem-sucedido
@@ -36,17 +65,14 @@ const router = Router();
  *               properties:
  *                 token:
  *                   type: string
- *                 user:
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 usuario:
  *                   $ref: '#/components/schemas/Usuario'
  *       401:
  *         description: Credenciais inválidas
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *       400:
+ *         description: Erro de validação
  */
-router.get('/', (req, res) => {
-    res.send('Autenticação OK');
-  });
-  
-  export default router;
+router.post('/login', validateDto(LoginDto), login);
+
+export default router;

@@ -1,136 +1,137 @@
-import swaggerJsdoc from 'swagger-jsdoc';
-import { version } from '../../package.json';
+import { SwaggerDefinition } from 'swagger-jsdoc';
 
-const options: swaggerJsdoc.Options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Plataforma EAD API',
-      version,
-      description: 'Documentação da API da plataforma EAD do Senai Cimatec',
-      contact: {
-        name: 'Equipe de Desenvolvimento',
-        email: 'equipe@eadsenai.com'
-      },
-      license: {
-        name: 'MIT',
-      }
-    },
-    servers: [
-      {
-        url: 'http://localhost:3000/api',
-        description: 'Servidor de Desenvolvimento'
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
-      },
-      schemas: {
-        Usuario: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            nome: { type: 'string' },
-            email: { type: 'string', format: 'email' },
-            tipo: { type: 'string', enum: ['ALUNO', 'PROFESSOR', 'ADMIN'] }
-          }
-        },
-        ErrorResponse: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' },
-            message: { type: 'string' }
-          }
-        }
-      }
-    },
-    security: [{
-      bearerAuth: []
-    }]
+const swaggerDefinition: SwaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'API Plataforma EAD',
+    version: '1.0.0',
+    description: 'Documentação completa da API',
   },
-  apis: ['./src/routes/*.ts', './src/dto/*.ts', './src/models/*.ts']
+  servers: [
+    { 
+      url: 'http://localhost:3000/api',
+      description: 'Development server' 
+    }
+  ],
+  tags: [
+    {
+      name: 'Autenticação',
+      description: 'Endpoints de autenticação de usuários'
+    },
+    {
+      name: 'Cursos',
+      description: 'Gerenciamento de cursos'
+    },
+    {
+      name: 'Usuários',
+      description: 'Gerenciamento de usuários'
+    }
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      }
+    },
+    schemas: {
+      UsuarioLogin: {
+        type: 'object',
+        required: ['email', 'senha'],
+        properties: {
+          email: { 
+            type: 'string', 
+            format: 'email',
+            example: 'usuario@exemplo.com'
+          },
+          senha: { 
+            type: 'string',
+            minLength: 6,
+            example: 'senha123'
+          }
+        }
+      },
+      UsuarioCreate: {
+        type: 'object',
+        required: ['nome', 'email', 'senha', 'tipo'],
+        properties: {
+          nome: { 
+            type: 'string', 
+            minLength: 3,
+            example: 'Fulano da Silva'
+          },
+          email: { 
+            type: 'string', 
+            format: 'email',
+            example: 'fulano@exemplo.com'
+          },
+          senha: { 
+            type: 'string',
+            minLength: 6,
+            example: 'senha123'
+          },
+          tipo: { 
+            type: 'string', 
+            enum: ['ADMIN', 'PROFESSOR', 'ALUNO'],
+            example: 'ALUNO'
+          },
+          planoId: { 
+            type: 'string',
+            nullable: true,
+            example: '123e4567-e89b-12d3-a456-426614174000'
+          }
+        }
+      },
+      CursoCreate: {
+        type: 'object',
+        required: ['titulo', 'professorId'],
+        properties: {
+          titulo: { 
+            type: 'string',
+            example: 'Introdução ao TypeScript'
+          },
+          descricao: { 
+            type: 'string',
+            nullable: true,
+            example: 'Curso introdutório de TypeScript'
+          },
+          categoria: { 
+            type: 'string',
+            enum: ['INICIANTE', 'INTERMEDIARIO', 'AVANCADO'],
+            example: 'INICIANTE'
+          },
+          cargaHoraria: { 
+            type: 'number',
+            nullable: true,
+            example: 40
+          },
+          professorId: { 
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000'
+          }
+        }
+      },
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          error: {
+            type: 'string',
+            example: 'Mensagem de erro detalhada'
+          }
+        }
+      }
+    }
+  }
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+const options = {
+  swaggerDefinition,
+  apis: [
+    './src/routes/*.ts',
+    './src/controllers/*.ts',
+    './src/dto/*.ts'
+  ],
+};
 
-export default swaggerSpec;
-
-// Adicione isso no seu swagger.ts ou em arquivos separados
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Curso:
- *       type: object
- *       required:
- *         - titulo
- *         - cargaHoraria
- *       properties:
- *         id:
- *           type: string
- *           format: uuid
- *         titulo:
- *           type: string
- *         descricao:
- *           type: string
- *         cargaHoraria:
- *           type: integer
- *         modulos:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/Modulo'
- * 
- *     Modulo:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         titulo:
- *           type: string
- *         ordem:
- *           type: integer
- */
-/**
- * @swagger
- * components:
- *   schemas:
- *     Plano:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         nome:
- *           type: string
- *           enum: [BASICO, EMPREENDEDOR, STARTUP]
- *         descricao:
- *           type: string
- * 
- *     ProgressoAluno:
- *       type: object
- *       properties:
- *         alunoId:
- *           type: string
- *         cursoId:
- *           type: string
- *         videosAssistidos:
- *           type: array
- *           items:
- *             type: string
- *         porcentagemConclusao:
- *           type: number
- */
-/**
- * @swagger
- * /api/cursos:
- *   post:
- *     security:
- *       - bearerAuth: []
- *     tags: [Cursos]
- *     description: Rota protegida para admin/professor
- */
+export default require('swagger-jsdoc')(options);

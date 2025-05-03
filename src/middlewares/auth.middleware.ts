@@ -2,22 +2,31 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { TipoUsuario } from '@prisma/client';
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('Variável JWT_SECRET não está definida no .env');
+}
+
 declare global {
   namespace Express {
     interface Request {
       user?: {
         id: string;
-        tipo: TipoUsuario;  // Alinhado com seu schema Prisma
+        tipo: TipoUsuario;
       };
     }
   }
+}
+
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET não definido no .env');
 }
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
-    return res.status(401).json({ error: 'Token de autenticação não fornecido' });
+    return res.status(401).json({ error: 'Token não fornecido' });
   }
 
   const [bearer, token] = authHeader.split(' ');
@@ -27,43 +36,41 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+    const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string;
       tipo: TipoUsuario;
+      iat: number; 
+      exp: number;
     };
-    
+
+    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+      return res.status(401).json({ error: 'Token expirado' });
+    }
+
     req.user = {
       id: decoded.id,
-      tipo: decoded.tipo
+      tipo: decoded.tipo,
     };
     
     next();
   } catch (error) {
-    const errorMessage = error instanceof jwt.TokenExpiredError 
-      ? 'Token expirado' 
-      : error instanceof jwt.JsonWebTokenError
-        ? 'Token inválido'
-        : 'Falha na autenticação';
-    
-    return res.status(401).json({ 
-      error: errorMessage,
-      details: error instanceof Error ? error.message : undefined
-    });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: 'Token expirado' });
+    }
+    res.status(401).json({ error: 'Token inválido' });
   }
 };
 
 export const authorize = (allowedRoles: TipoUsuario[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(403).json({ error: 'Acesso não autorizado - usuário não autenticado' });
+      return res.status(403).json({ error: 'Acesso não autorizado' });
     }
 
     if (!allowedRoles.includes(req.user.tipo)) {
       return res.status(403).json({ 
-        error: 'Acesso não autorizado',
+        error: 'Permissão insuficiente',
         requiredRoles: allowedRoles,
-        currentRole: req.user.tipo,
-        message: `Esta ação requer um dos seguintes perfis: ${allowedRoles.join(', ')}`
       });
     }
 
@@ -71,23 +78,18 @@ export const authorize = (allowedRoles: TipoUsuario[]) => {
   };
 };
 
-// Middleware adicional para verificar se o usuário é dono do recurso
 export const checkOwnership = (resourceOwnerIdField = 'id') => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(403).json({ error: 'Acesso não autorizado' });
     }
 
-    // Se for ADMIN, permite independente da propriedade
     if (req.user.tipo === 'ADMIN') {
       return next();
     }
 
-    // Compara o ID do usuário com o ID do recurso
     if (req.user.id !== req.params[resourceOwnerIdField]) {
-      return res.status(403).json({ 
-        error: 'Acesso não autorizado - você não é o proprietário deste recurso'
-      });
+      return res.status(403).json({ error: 'Você não é o proprietário deste recurso' });
     }
 
     next();
