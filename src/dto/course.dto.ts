@@ -1,42 +1,21 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber } from 'class-validator';
+import { z } from 'zod';
 import { NivelCurso } from '@prisma/client';
 
-export class CriarCursoDto {
-  @IsString()
-  @IsNotEmpty()
-  titulo: string | undefined;
+// Criar Curso
+export const CriarCursoSchema = z.object({
+  titulo: z.string().min(1, 'Título é obrigatório'),
+  professorId: z.string().uuid('ID do professor inválido'),
+  descricao: z.string().optional(),
+  categoria: z.nativeEnum(NivelCurso).optional(),
+  cargaHoraria: z.number().int().positive().optional(),
+});
+export type CriarCursoDto = z.infer<typeof CriarCursoSchema>;
 
-  @IsString()
-  @IsNotEmpty()
-  professorId: string | undefined;
-
-  @IsString()
-  @IsOptional()
-  descricao?: string;
-
-  @IsEnum(NivelCurso)
-  @IsOptional()
-  categoria?: NivelCurso;
-
-  @IsNumber()
-  @IsOptional()
-  cargaHoraria?: number;
-}
-
-export class AtualizarCursoDto {
-  @IsString()
-  @IsOptional()
-  titulo?: string;
-
-  @IsString()
-  @IsOptional()
-  descricao?: string;
-
-  @IsEnum(NivelCurso)
-  @IsOptional()
-  categoria?: NivelCurso;
-
-  @IsNumber()
-  @IsOptional()
-  cargaHoraria?: number;
-}
+// Atualizar Curso
+export const AtualizarCursoSchema = z.object({
+  titulo: z.string().min(1, 'Título é obrigatório').optional(),
+  descricao: z.string().optional(),
+  categoria: z.nativeEnum(NivelCurso).optional(),
+  cargaHoraria: z.number().int().positive().optional(),
+});
+export type AtualizarCursoDto = z.infer<typeof AtualizarCursoSchema>;

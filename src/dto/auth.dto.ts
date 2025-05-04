@@ -1,31 +1,19 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
-import { TipoUsuario, NivelCurso } from '@prisma/client';
+import { z } from 'zod';
+import { TipoUsuario } from '@prisma/client';
 
-export class LoginDto {
-  @IsEmail()
-  email: string | undefined;
+// Login
+export const LoginSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+  senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+});
+export type LoginDto = z.infer<typeof LoginSchema>;
 
-  @IsString()
-  @MinLength(6)
-  senha: string | undefined;
-}
-
-export class CriarUsuarioDto {
-  @IsString()
-  @MinLength(3)
-  nome: string | undefined;
-
-  @IsEmail()
-  email: string | undefined;
-
-  @IsString()
-  @MinLength(6)
-  senha: string | undefined;
-
-  @IsEnum(TipoUsuario)
-  tipo: TipoUsuario | undefined;
-
-  @IsString()
-  @IsOptional()
-  planoId?: string;
-}
+// Registrar Usuário
+export const CriarUsuarioSchema = z.object({
+  nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  email: z.string().email('E-mail inválido'),
+  senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  tipo: z.nativeEnum(TipoUsuario),
+  planoId: z.string().optional(),
+});
+export type CriarUsuarioDto = z.infer<typeof CriarUsuarioSchema>;

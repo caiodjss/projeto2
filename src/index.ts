@@ -1,26 +1,39 @@
-import 'dotenv/config';
-import swaggerUi from 'swagger-ui-express'; // Adicione esta importação
-import { app } from './app';
-import prisma from './config/database';
+import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
+import cors from 'cors';
+import authRoutes from './routes/auth.routes';
+import courseRoutes from './routes/course.routes';
+import turmaRoutes from './routes/turma.routes';
+import usuarioRoutes from './routes/usuarioRoutes';
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-// Configure o Swagger antes de iniciar o servidor
+// Middlewares essenciais
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Opcional: configure origens específicas se necessário
+
+// Swagger UI
 app.use('/api-docs', 
   swaggerUi.serve, 
   swaggerUi.setup(swaggerSpec)
 );
 
-const server = app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Documentação disponível em http://localhost:${PORT}/api-docs`);
+// Registre suas rotas
+app.use('/api/auth', authRoutes);
+app.use('/api/cursos', courseRoutes);
+app.use('/api/turmas', turmaRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+
+// Rota de health check (opcional)
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'UP' });
 });
 
-// Fechar conexões adequadamente
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  server.close(() => {
-    console.log('Servidor encerrado');
-  });
+// Inicie o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Documentação disponível em http://localhost:${PORT}/api-docs`);
 });

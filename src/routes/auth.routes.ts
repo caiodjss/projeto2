@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { login, criarUsuario } from '../controllers/auth.controller';
-import { validateDto } from '../middlewares/validate';
-import { LoginDto, CriarUsuarioDto } from '../dto/auth.dto';
+import { validate } from '../middlewares/validate';
+import { LoginSchema, CriarUsuarioSchema } from '../dto/auth.dto';
 
 const router = Router();
 
@@ -11,7 +11,6 @@ const router = Router();
  *   post:
  *     tags: [Autenticação]
  *     summary: Registrar novo usuário
- *     description: Cria uma conta de usuário na plataforma
  *     requestBody:
  *       required: true
  *       content:
@@ -21,26 +20,14 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 usuario:
- *                   $ref: '#/components/schemas/Usuario'
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
  *         description: Erro de validação
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: E-mail já cadastrado
  */
-router.post('/registrar', validateDto(CriarUsuarioDto), criarUsuario);
+router.post('/registrar', validate(CriarUsuarioSchema), criarUsuario);
 
 /**
  * @swagger
@@ -48,31 +35,21 @@ router.post('/registrar', validateDto(CriarUsuarioDto), criarUsuario);
  *   post:
  *     tags: [Autenticação]
  *     summary: Autenticar usuário
- *     description: Realiza login e retorna token JWT
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UsuarioLogin'
+ *             type: object
+ *             properties:
+ *               email: { type: string, format: email }
+ *               senha: { type: string }
  *     responses:
  *       200:
  *         description: Login bem-sucedido
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 usuario:
- *                   $ref: '#/components/schemas/Usuario'
  *       401:
  *         description: Credenciais inválidas
- *       400:
- *         description: Erro de validação
  */
-router.post('/login', validateDto(LoginDto), login);
+router.post('/login', validate(LoginSchema), login);
 
 export default router;

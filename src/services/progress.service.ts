@@ -74,7 +74,7 @@ export const submitAssessment = async (
     }
   });
 };
-// Obter progresso completo do curso
+
 export const getFullCourseProgress = async (
   userId: string,
   courseId: string
@@ -190,4 +190,32 @@ export const getFullCourseProgress = async (
       }
     }
   };
+};
+
+// Alternative methods if composite keys don't work
+export const findVideoProgress = async (userId: string, videoId: string) => {
+  return await prisma.progressoAluno.findFirst({
+    where: {
+      alunoId: userId,
+      videoId: videoId
+    }
+  });
+};
+
+export const findMaterialProgress = async (userId: string, apostilaId: string) => {
+  return await prisma.progressoAluno.findFirst({
+    where: {
+      alunoId: userId,
+      apostilaId: apostilaId
+    }
+  });
+};
+
+export const findAssessmentProgress = async (userId: string, avaliacaoId: string) => {
+  return await prisma.progressoAluno.findFirst({
+    where: {
+      alunoId: userId,
+      avaliacaoId: avaliacaoId
+    }
+  });
 };

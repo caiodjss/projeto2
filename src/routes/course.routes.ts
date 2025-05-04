@@ -6,8 +6,8 @@ import {
   updateCourse,
   deleteCourse
 } from '../controllers/course.controller';
-import { validateDto } from '../middlewares/validate';
-import { CriarCursoDto, AtualizarCursoDto } from '../dto/course.dto';
+import { validate } from '../middlewares/validate'; // Middleware Zod
+import { CriarCursoSchema, AtualizarCursoSchema } from '../dto/course.dto'; // Schemas Zod
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 import { TipoUsuario } from '@prisma/client';
 
@@ -97,10 +97,9 @@ router.post(
   '/',
   authenticate,
   authorize([TipoUsuario.ADMIN, TipoUsuario.PROFESSOR]),
-  validateDto(CriarCursoDto),
+  validate(CriarCursoSchema), // Validação com Zod
   createCourse
 );
-
 /**
  * @swagger
  * /cursos/{id}:
@@ -142,7 +141,7 @@ router.put(
   '/:id',
   authenticate,
   authorize([TipoUsuario.ADMIN, TipoUsuario.PROFESSOR]),
-  validateDto(AtualizarCursoDto),
+  validate(AtualizarCursoSchema), // Validação com Zod
   updateCourse
 );
 
