@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
-import { CriarTurmaDto, AtualizarTurmaDto, MatricularAlunoDto, DesmatricularAlunoDto, FiltrarTurmasDto } from '../dto/turma.dto';
+import { CriarTurmaDto, AtualizarTurmaDto, MatricularAlunoDto, DesmatricularAlunoDto, FiltrarTurmasDto, CriarTurmaSchema } from '../dto/turma.dto';
 
 export const criarTurma = async (req: Request<{}, {}, CriarTurmaDto>, res: Response) => {
+  console.log('Dados recebidos:', req.body);
+  console.log('Dados recebidos (RAW):', req.body);
+  console.log('Validação:', CriarTurmaSchema.safeParse(req.body));
   try {
     const novaTurma = await prisma.turma.create({
       data: req.body,

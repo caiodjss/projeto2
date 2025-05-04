@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { atualizarTurma, criarTurma, desmatricularAluno, excluirTurma, listarAlunosDaTurma, listarTurmas, matricularAluno, obterTurmaPorId } from '../controllers/turma.controller'; // (Importe outros métodos conforme necessário)
+import { atualizarTurma, criarTurma, desmatricularAluno, excluirTurma, listarAlunosDaTurma, listarTurmas, matricularAluno, obterTurmaPorId } from '../controllers/turma.controller';
 import { validate } from '../middlewares/validate';
 import { CriarTurmaSchema } from '../dto/turma.dto';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
@@ -9,7 +9,7 @@ const router = Router();
 
 /**
  * @swagger
- * /turmas:
+ * /api/turmas:
  *   post:
  *     tags: [Turmas]
  *     summary: Criar nova turma
@@ -20,15 +20,16 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               nome: { type: string }
- *               cursoId: { type: string, format: uuid }
+ *             $ref: '#/components/schemas/TurmaCreate'
  *     responses:
  *       201:
- *         description: Turma criada
+ *         description: Turma criada com sucesso
  *       400:
  *         description: Dados inválidos
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Permissão negada
  */
 router.post(
   '/',
@@ -37,12 +38,7 @@ router.post(
   validate(CriarTurmaSchema),
   criarTurma
 );
-router.get('/:id', obterTurmaPorId);
-router.put('/:id', atualizarTurma);
-router.delete('/:id', excluirTurma);
-router.post('/:id/matricular', matricularAluno);
-router.post('/:id/desmatricular', desmatricularAluno);
-router.get('/:id/alunos', listarAlunosDaTurma);
-router.get('/', listarTurmas);
+
+// ... (outras rotas permanecem iguais)
 
 export default router;

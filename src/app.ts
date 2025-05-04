@@ -3,13 +3,19 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import usuarioRoutes from './routes/usuarioRoutes';
 import cursoRoutes from './routes/course.routes';
+import planoRoutes from './routes/plano.routes';
 import authRoutes from './routes/auth.routes';
-import turmaRoutes from './routes/turma.routes'; // Importe as rotas de turma
-import swaggerSpec from './config/swagger'; // ✅ Correto
+import turmaRoutes from './routes/turma.routes'; 
+import swaggerSpec from './config/swagger'; 
+import moduloRoutes from './routes/modulo.routes';
 import prisma from './config/database';
+import videoRoutes from './routes/video.routes';
 import { env } from './config/env';
 
 const app = express();
+
+app.use('/api', moduloRoutes);
+app.use('/api', videoRoutes);
 
 // Usando o middleware CORS
 app.use(cors());
@@ -34,7 +40,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/cursos', cursoRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/turmas', turmaRoutes); // Use as rotas de turma
+app.use('/api/turmas', turmaRoutes);
+app.use('/api/planos', planoRoutes);
 
 // Conectar ao Prisma na inicialização da aplicação (opcional, pode ser feito no server.ts)
 prisma.$connect()

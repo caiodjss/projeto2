@@ -1,24 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { AnyZodObject, ZodEffects, ZodError } from 'zod';
 
-export const validate = (schema: AnyZodObject) => 
-  (req: Request, res: Response, next: NextFunction) => {
+export const validate = (schema: AnyZodObject | ZodEffects<any>) => 
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse({
-        body: req.body,
-        params: req.params,
-        query: req.query,
-      });
+      // Alteração principal: validar diretamente o req.body
+      await schema.parseAsync(req.body);
       next();
-    } catch (err) {
-      if (err instanceof ZodError) {
+    } catch (error) {
+      if (error instanceof ZodError) {
         return res.status(400).json({
-          errors: err.errors.map(e => ({
-            path: e.path.join('.'),
-            message: e.message,
-          })),
+          status: 'fail',
+          errors: error.errors
         });
       }
-      next(err);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error'
+      });
     }
   };

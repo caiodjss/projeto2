@@ -1,7 +1,6 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
-import cors from 'cors';
 import authRoutes from './routes/auth.routes';
 import courseRoutes from './routes/course.routes';
 import turmaRoutes from './routes/turma.routes';
@@ -12,7 +11,6 @@ const app = express();
 // Middlewares essenciais
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors()); // Opcional: configure origens específicas se necessário
 
 // Swagger UI
 app.use('/api-docs', 
