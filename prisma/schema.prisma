@@ -25,17 +25,43 @@ model Usuario {
   turmasComoProfessor Turma[]          @relation("ProfessorTurma")
 
   @@map("usuarios")
+  Mentoria Mentoria[]
+  ModelagemNegocio ModelagemNegocio[]
 }
 
 model Plano {
-  id        String    @id @default(uuid())
-  nome      String
-  descricao String
-  preco     Float?
-  usuarios  Usuario[]
-  createdAt DateTime  @default(now()) @map("created_at")
-
+  id               String     @id @default(uuid())
+  nome             String     @unique
+  descricao        String
+  preco            Float?
+  usuarios         Usuario[]
+  beneficios       BeneficioPlano[]
+  createdAt        DateTime   @default(now()) @map("created_at")
+  
   @@map("planos")
+}
+
+model BeneficioPlano {
+  id          String   @id @default(uuid())
+  nome        String
+  descricao   String
+  tipo        TipoBeneficio
+  plano       Plano     @relation(fields: [planoId], references: [id])
+  planoId     String
+  config      Json?     // Para configurações específicas (como links de WhatsApp)
+  ativo       Boolean   @default(true)
+  
+  @@map("beneficios_plano")
+}
+
+enum TipoBeneficio {
+  ACESSO_MODULOS
+  GRUPO_WHATSAPP
+  MENTORIAS
+  EVENTOS
+  MODELAGEM_NEGOCIOS
+  INCUBACAO
+  CONTRATO_DIGITAL
 }
 
 model Curso {
@@ -67,6 +93,7 @@ model Turma {
   createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("turmas")
+  Mensagem Mensagem[]
 }
 
 model Modulo {
@@ -134,11 +161,35 @@ model ProgressoAluno {
   baixouApostila      Boolean    @default(false)
   notaAvaliacao       Float?
   dataUltimaInteracao DateTime   @default(now())
+  concluido           Boolean    @default(false)  // Adicione esta linha
 
   @@map("progresso_aluno")
   @@unique([alunoId, videoId], name: "alunoId_videoId")
   @@unique([alunoId, apostilaId], name: "alunoId_apostilaId")
   @@unique([alunoId, avaliacaoId], name: "alunoId_avaliacaoId")
+}
+
+model Mentoria {
+  id        String   @id @default(uuid())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId String
+  data      DateTime
+  tema      String
+  status    String   @default("AGENDADA") // Pode ser um enum se preferir
+  createdAt DateTime @default(now())
+  
+  @@map("mentorias")
+}
+
+model ModelagemNegocio {
+  id        String   @id @default(uuid())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId String
+  dados     Json     // Ou campos específicos se preferir
+  etapa     String   @default("INICIAL")
+  createdAt DateTime @default(now())
+  
+  @@map("modelagem_negocios")
 }
 
 model Mensagem {
@@ -147,10 +198,16 @@ model Mensagem {
   remetenteId    String
   destinatario   Usuario  @relation("MensagensRecebidas", fields: [destinatarioId], references: [id])
   destinatarioId String
-  conteudo       String
+  conteudo       String   @db.VarChar(1000)
   lida           Boolean  @default(false)
+  deletada       Boolean  @default(false)
+  turma          Turma?   @relation(fields: [turmaId], references: [id])
+  turmaId        String?
   createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
+  @@index([remetenteId])
+  @@index([destinatarioId])
   @@map("mensagens")
 }
 

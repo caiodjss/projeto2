@@ -9,13 +9,15 @@ import turmaRoutes from './routes/turma.routes';
 import swaggerSpec from './config/swagger'; 
 import moduloRoutes from './routes/modulo.routes';
 import prisma from './config/database';
-import videoRoutes from './routes/video.routes';
+import videoRoutes from './routes/video.routes'
+import mensagemRoutes from './routes/mensagem.routes';
 import { env } from './config/env';
 
 const app = express();
 
 app.use('/api', moduloRoutes);
 app.use('/api', videoRoutes);
+app.use('/api/mensagens', mensagemRoutes);
 
 // Usando o middleware CORS
 app.use(cors());

@@ -59,6 +59,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     }
     res.status(401).json({ error: 'Token inválido' });
   }
+
+  
 };
 
 export const authorize = (allowedRoles: TipoUsuario[]) => {
