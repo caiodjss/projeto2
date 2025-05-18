@@ -1,11 +1,14 @@
-import { Usuario } from '@prisma/client';
+// types/express/index.d.ts
+import { User } from '../models/User'; // ou defina o tipo manualmente
 
 declare global {
   namespace Express {
     interface Request {
-      usuario?: Usuario;
+      user: {
+        id: string;
+        role: string;
+        // adicione outros campos se necessário
       };
     }
+  }
 }
-
-export {};

@@ -9,45 +9,59 @@ import turmaRoutes from './routes/turma.routes';
 import swaggerSpec from './config/swagger'; 
 import moduloRoutes from './routes/modulo.routes';
 import prisma from './config/database';
-import videoRoutes from './routes/video.routes'
+import videoRoutes from './routes/video.routes';
 import mensagemRoutes from './routes/mensagem.routes';
 import { env } from './config/env';
+import { errorHandler } from './middlewares/errorHandler'; // Adicione este middleware
 
 const app = express();
 
-app.use('/api', moduloRoutes);
-app.use('/api', videoRoutes);
-app.use('/api/mensagens', mensagemRoutes);
-
-// Usando o middleware CORS
-app.use(cors());
-
-// Usando o middleware para processar corpo JSON
+// 1. Middlewares essenciais (DEVEM vir primeiro)
+app.use(cors({
+  origin: env.CORS_ORIGINS.split(','), // Ex: 'http://localhost:3000,http://localhost:5500'
+  credentials: true
+}));
 app.use(express.json());
 
-// Definindo a documentação Swagger
+// 2. Documentação Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Rotas básicas
+// 3. Rotas de status/health
 app.get('/', (req, res) => {
-  res.json({ message: 'API da Plataforma EAD' });
+  res.json({ 
+    message: 'API da Plataforma EAD',
+    environment: env.NODE_ENV,
+    version: env.APP_VERSION
+  });
 });
 
-// Endpoint de health check
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'UP', environment: env.NODE_ENV });
+  res.status(200).json({ 
+    status: 'UP', 
+    environment: env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Rotas principais
+// 4. Rotas da API (organizadas por contexto)
+app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/cursos', cursoRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/cursos/:cursoId/modulos', moduloRoutes); // Aninhadas sob cursos
+app.use('/api/modulos/:moduloId/videos', videoRoutes); // Aninhadas sob módulos
 app.use('/api/turmas', turmaRoutes);
 app.use('/api/planos', planoRoutes);
+app.use('/api/mensagens', mensagemRoutes);
 
-// Conectar ao Prisma na inicialização da aplicação (opcional, pode ser feito no server.ts)
+// 5. Conexão com Prisma (melhor mover para server.ts)
 prisma.$connect()
-  .then(() => console.log('Conectado ao banco de dados'))
-  .catch((e) => console.error('Erro ao conectar ao banco de dados:', e));
+  .then(() => console.log('✅ Conectado ao banco de dados'))
+  .catch((e) => {
+    console.error('❌ Erro ao conectar ao banco de dados:', e);
+    process.exit(1);
+  });
+
+// 6. Middleware de erro global (DEVE ser o último)
+app.use(errorHandler);
 
 export { app };

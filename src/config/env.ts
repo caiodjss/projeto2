@@ -8,4 +8,12 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
 });
 
-export const env = envSchema.parse(process.env);
+// src/config/env.ts
+export const env = {
+  DATABASE_URL: process.env.DATABASE_URL as string,
+  JWT_SECRET: process.env.JWT_SECRET as string,
+  NODE_ENV: process.env.NODE_ENV as 'development' | 'production',
+  PORT: Number(process.env.PORT) || 3001,
+  CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:3000', // Valor padrão
+  APP_VERSION: process.env.APP_VERSION || '1.0.0' // Valor padrão
+};
